@@ -28,6 +28,12 @@
             display: block;
             cursor: crosshair;
         }
+
+        #gameCanvas.pouring {
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewport="0 0 32 32" y="0" x="0"><g transform="scale(0.032)"><circle cx="500" cy="500" r="450" fill="orange" stroke="red" stroke-width="50"><animate attributeName="r" values="450;480;450" dur="1s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0.7;1" dur="1s" repeatCount="indefinite"/></circle></g></svg>') 16 16, crosshair;
+        }
+        
+        /* UI Overlays */
         
         /* UI Overlays */
         .overlay {
@@ -235,6 +241,16 @@
             margin-top: 10px;
             border-left: 4px solid #ff6600;
         }
+
+        .hud-stat #hudLava.low-budget {
+            color: #ff0000;
+            animation: pulse-red 1s infinite alternate;
+        }
+
+        @keyframes pulse-red {
+            from { transform: scale(1); opacity: 1; }
+            to { transform: scale(1.05); opacity: 0.7; }
+        }
         
         .stats-display {
             text-align: center;
@@ -267,12 +283,25 @@
                 font-size: 2em;
             }
             button {
-                padding: 12px 20px;
+                padding: 15px 25px;
                 font-size: 16px;
+                min-height: 44px;
+                min-width: 100px;
+            }
+            .button-group {
+                flex-direction: column;
+            }
+            .button-group button {
+                width: 100%;
             }
             .level-grid {
                 grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
                 gap: 15px;
+            }
+            .hud-controls button {
+                padding: 10px 14px;
+                font-size: 12px;
+                margin-left: 5px;
             }
         }
     </style>
@@ -313,6 +342,19 @@
         </div>
     </div>
     
+    <!-- Pause Menu -->
+    <div id="pauseOverlay" class="overlay">
+        <div class="modal">
+            <h1>⏸️ PAUSED ⏸️</h1>
+            <div class="button-group">
+                <button id="resumeBtn">Resume Game</button>
+                <button id="pauseInstructionsBtn">Instructions</button>
+                <button id="pauseRestartBtn">Restart Level</button>
+                <button id="pauseMenuBtn">Main Menu</button>
+            </div>
+        </div>
+    </div>
+    
     <!-- Main Menu -->
     <div id="menuOverlay" class="overlay active">
         <div class="modal">
@@ -321,6 +363,7 @@
                 <button id="continueBtn">Continue</button>
                 <button id="levelSelectBtn">Level Select</button>
                 <button id="sandboxBtn">Sandbox Mode</button>
+                <button id="mainMenuInstructionsBtn">Instructions</button>
             </div>
             <div class="info-text" id="menuStars">Total Stars: ⭐ 0</div>
         </div>
@@ -358,6 +401,69 @@
         </div>
     </div>
     
+    <!-- Pause Screen -->
+    <div id="pauseOverlay" class="overlay">
+        <div class="modal">
+            <h1>Game Paused</h1>
+            <div class="button-group">
+                <button id="resumeBtn">▶️ Resume</button>
+                <button id="pauseRestartBtn">🔄 Restart Level</button>
+                <button id="howToPlayBtn">💡 How to Play</button>
+                <button id="pauseMenuBtn">🏠 Main Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- How to Play / Tutorial Overlay -->
+    <div id="howToPlayOverlay" class="overlay">
+        <div class="modal">
+            <h1 id="howToPlayTitle">How to Play</h1>
+            <div id="howToPlayContent" style="text-align: left; margin: 20px 0; color: #ccc; line-height: 1.6;">
+                <p>Welcome to Lava Flow! Your goal is to guide molten lava to achieve various objectives.</p>
+                <p><strong>Controls:</strong></p>
+                <ul>
+                    <li><strong>Pour Lava:</strong> Click and hold (or tap and hold on mobile) on the terrain to make lava erupt from that point. Release to stop.</li>
+                    <li><strong>Interact:</strong> Click or tap on interactive elements like gates to open or close them.</li>
+                    <li><strong>Camera/Pan:</strong> (Feature not yet implemented - stay tuned!)</li>
+                </ul>
+                <p><strong>Objectives:</strong></p>
+                <ul>
+                    <li><strong>Fill Target:</strong> Fill designated zones with a required amount of lava.</li>
+                    <li><strong>Reach Point:</strong> Get lava to specific beacon points.</li>
+                    <li><strong>Collection:</strong> Fill basins to a precise target amount, avoiding overfilling.</li>
+                    <li><strong>Connect:</strong> Create a continuous flow of lava between multiple points.</li>
+                    <li><strong>Sequence:</strong> Activate targets in a specific order.</li>
+                    <li><strong>Contain:</strong> Fill a target zone without letting lava spill into danger zones.</li>
+                </ul>
+                <p><strong>Tips:</strong></p>
+                <ul>
+                    <li>Manage your lava budget (if applicable) wisely.</li>
+                    <li>Observe the terrain and plan your flow.</li>
+                    <li>Some levels have restricted pour points – you can only pour lava from these areas.</li>
+                </ul>
+            </div>
+            <div class="button-group">
+                <button id="backFromHowToPlayBtn">Back</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Level 1 Tutorial Overlay -->
+    <div id="level1TutorialOverlay" class="overlay">
+        <div class="modal">
+            <h2>Level 1: First Pour</h2>
+            <div style="text-align: center; margin: 20px 0; font-size: 1.1em; color: #fff;">
+                <p>Welcome, aspiring Volcanologist! In this level, you'll learn the basics of lava control.</p>
+                <p><strong>Your Goal:</strong> Fill the glowing blue target zone with lava.</p>
+                <p><strong>To Pour Lava:</strong></p>
+                <p>Click and hold your mouse (or tap and hold on mobile) anywhere on the terrain to make lava erupt. Try to guide it into the target!</p>
+            </div>
+            <div class="button-group">
+                <button id="startLevel1TutorialBtn">Got It! Start Level</button>
+            </div>
+        </div>
+    </div>
+    
     <!-- Defeat Screen -->
     <div id="defeatOverlay" class="overlay">
         <div class="modal">
@@ -366,6 +472,59 @@
             <div class="button-group">
                 <button id="defeatRetryBtn">Retry</button>
                 <button id="defeatMenuBtn">Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Level 1 Tutorial -->
+    <div id="tutorialOverlay" class="overlay">
+        <div class="modal">
+            <h1>🔥 Welcome to Lava Flow! 🔥</h1>
+            <p style="margin: 15px 0; text-align: center; color: #ccc; font-size: 1.1em;">Learn the basics!</p>
+            <div style="text-align: left; max-width: 600px; margin: 0 auto; background: rgba(255, 102, 0, 0.1); padding: 20px; border-radius: 10px; border-left: 4px solid #ff6600;">
+                <h3 style="color: #ffaa44; margin-top: 0;">How to Play:</h3>
+                <ol style="color: #ddd; line-height: 1.8;">
+                    <li><strong>Click and drag</strong> (or tap and drag on mobile) on the game canvas to pour lava.</li>
+                    <li>Guide the lava to fill the <strong>blue dashed circle</strong> (the target zone).</li>
+                    <li>The target shows your <strong>current lava amount</strong> as you fill it.</li>
+                    <li>Once you fill the target enough, you complete the level! 🎉</li>
+                </ol>
+                <p style="margin-top: 20px; color: #ffaa44;"><strong>💡 Tip:</strong> Lava flows downhill following the terrain. Experiment with different pour locations!</p>
+            </div>
+            <div class="button-group">
+                <button id="closeTutorialBtn">Got It! Let's Play!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instructions Overlay -->
+    <div id="instructionsOverlay" class="overlay">
+        <div class="modal">
+            <h1>How to Play Lava Flow 🔥</h1>
+            <p style="margin-bottom: 20px; text-align: center; color: #ccc;">Guide the molten rock to victory!</p>
+            <div style="text-align: left; max-width: 600px; margin: 0 auto;">
+                <h3 style="color: #ffaa44; margin-top: 15px;">Controls:</h3>
+                <ul>
+                    <li style="margin-bottom: 5px;"><strong>Pour Lava:</strong> Click and drag (PC) or tap and drag (Mobile) on the game canvas to pour lava.</li>
+                    <li style="margin-bottom: 5px;"><strong>Interact:</strong> Click or tap on interactive elements like gates to open/close them.</li>
+                    <li style="margin-bottom: 5px;"><strong>Pause:</strong> Use the pause button in the HUD to temporarily stop the game.</li>
+                </ul>
+                <h3 style="color: #ffaa44; margin-top: 15px;">Objectives:</h3>
+                <ul>
+                    <li style="margin-bottom: 5px;"><strong>Fill Target:</strong> Get a certain amount of lava into a designated zone (blue dashed circle).</li>
+                    <li style="margin-bottom: 5px;"><strong>Reach Point:</strong> Guide lava to specific points (yellow pulsating circles).</li>
+                    <li style="margin-bottom: 5px;"><strong>Collection:</strong> Fill basins to a target amount (shown as a fill meter).</li>
+                    <li style="margin-bottom: 5px;"><strong>Connect:</strong> Form a continuous flow of lava between multiple points.</li>
+                    <li style="margin-bottom: 5px;"><strong>Sequence:</strong> Activate targets in a specific order.</li>
+                    <li style="margin-bottom: 5px;"><strong>Contain:</strong> Fill a target without spilling lava into danger zones (red zones).</li>
+                </ul>
+                <h3 style="color: #ffaa44; margin-top: 15px;">Scoring:</h3>
+                <ul>
+                    <li style="margin-bottom: 5px;">Earn stars by completing levels efficiently (low lava usage) and quickly (if time limit).</li>
+                </ul>
+            </div>
+            <div class="button-group">
+                <button id="closeInstructionsBtn">Got It!</button>
             </div>
         </div>
     </div>
@@ -409,7 +568,7 @@
                 objective: {
                     type: 'FILL_TARGET',
                     description: 'Fill the target zone with lava',
-                    zones: [{ x: 60, y: 80, radius: 15, required: 8 }]
+                    zones: [{ x: 60, y: 80, radius: 15, required: 5 }]
                 },
                 constraints: {
                     budget: Infinity,
@@ -417,7 +576,8 @@
                     timeLimit: null
                 },
                 interactive: [],
-                starThresholds: [1000, 1500, 2000]
+                starThresholds: [800, 1200, 1600],
+                hint: "Click and hold to pour lava. Guide it into the glowing blue circle!"
             },
             {
                 id: 2,
@@ -430,12 +590,13 @@
                     points: [{ x: 90, y: 100 }]
                 },
                 constraints: {
-                    budget: 60,
+                    budget: 80,
                     pourPoints: [{ x: 30, y: 30 }],
                     timeLimit: null
                 },
                 interactive: [],
-                starThresholds: [1200, 1800, 2400]
+                starThresholds: [1200, 1800, 2400],
+                hint: "You have a limited lava budget and can only pour from the highlighted yellow zone. Plan your flow carefully to reach the beacon!"
             },
             {
                 id: 3,
@@ -453,7 +614,34 @@
                     timeLimit: null
                 },
                 interactive: [],
-                starThresholds: [1500, 2200, 3000]
+                starThresholds: [1500, 2200, 3000],
+                hint: "Every drop counts! You have a very limited lava budget. Try to pour just enough to fill the crater without wasting any."
+            },
+                constraints: {
+                    budget: 60,
+                    pourPoints: [{ x: 30, y: 30 }],
+                    timeLimit: null
+                },
+                interactive: [],
+                starThresholds: [1000, 1500, 2000]
+            },
+            {
+                id: 3,
+                name: "Conservation",
+                act: "First Eruption",
+                terrain: 'crater',
+                objective: {
+                    type: 'FILL_TARGET',
+                    description: 'Fill the crater efficiently',
+                    zones: [{ x: 60, y: 60, radius: 20, required: 10 }]
+                },
+                constraints: {
+                    budget: 60,
+                    pourPoints: null,
+                    timeLimit: null
+                },
+                interactive: [],
+                starThresholds: [1200, 1800, 2500]
             },
             {
                 id: 4,
@@ -747,6 +935,8 @@
         let pourX = 0;
         let pourY = 0;
         let validPourPoints = null;
+        let pourIndicatorAlpha = 0; // For visual feedback
+        let pourIndicatorTargetAlpha = 0;
         
         let gameTime = 0;
         let lastFrameTime = Date.now();
@@ -1035,19 +1225,42 @@
             
             // Render pour points
             if (validPourPoints && (gameState.mode === GameState.PLAYING || gameState.mode === GameState.PAUSED)) {
+                ctx.save();
                 ctx.strokeStyle = '#ffaa00';
-                ctx.lineWidth = 2;
+                ctx.lineWidth = 3;
+                ctx.setLineDash([8, 8]);
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#ffaa00';
+                
                 for (const pp of validPourPoints) {
+                    const pulse = Math.sin(Date.now() * 0.003) * 0.2 + 0.8; // Pulsating effect
+                    ctx.globalAlpha = pulse;
                     ctx.beginPath();
                     ctx.arc(
                         offsetX + pp.x * cellSize,
                         offsetY + pp.y * cellSize,
-                        8 * cellSize,
+                        10 * cellSize,
                         0,
                         Math.PI * 2
                     );
                     ctx.stroke();
+                    
+                    // Draw a small solid circle in the center
+                    ctx.globalAlpha = 1;
+                    ctx.fillStyle = '#ffaa00';
+                    ctx.beginPath();
+                    ctx.arc(
+                        offsetX + pp.x * cellSize,
+                        offsetY + pp.y * cellSize,
+                        cellSize * 2,
+                        0,
+                        Math.PI * 2
+                    );
+                    ctx.fill();
                 }
+                ctx.restore();
+                ctx.globalAlpha = 1;
+                ctx.setLineDash([]);
             }
             
             // Render lava with glow
@@ -1094,6 +1307,29 @@
             }
             
             ctx.globalAlpha = 1;
+
+            // Smoothly update pour indicator alpha
+            pourIndicatorAlpha += (pourIndicatorTargetAlpha - pourIndicatorAlpha) * 0.1;
+            if (pourIndicatorAlpha < 0.01) pourIndicatorAlpha = 0; // Prevent tiny lingering alpha
+            
+            // Render pour indicator
+            if (pourIndicatorAlpha > 0 && (gameState.mode === GameState.PLAYING || gameState.mode === GameState.PAUSED)) {
+                ctx.save();
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = 'rgba(255, 165, 0, 0.8)';
+                ctx.strokeStyle = 'rgba(255, 165, 0, ' + pourIndicatorAlpha + ')';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.arc(
+                    pourX,
+                    pourY,
+                    15,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.stroke();
+                ctx.restore();
+            }
         }
         
         function renderObjectives(offsetX, offsetY, cellSize) {
@@ -1119,6 +1355,23 @@
                         Math.PI * 2
                     );
                     ctx.stroke();
+
+                    // Fill progress indicator
+                    const currentAmount = checkLavaInZone(zone.x, zone.y, zone.radius);
+                    const fillRatio = Math.min(1, currentAmount / zone.required);
+
+                    if (fillRatio > 0) {
+                        ctx.fillStyle = 'rgba(0, 255, 255, 0.3)';
+                        ctx.beginPath();
+                        ctx.arc(
+                            offsetX + zone.x * cellSize,
+                            offsetY + zone.y * cellSize,
+                            zone.radius * cellSize * fillRatio,
+                            0,
+                            Math.PI * 2
+                        );
+                        ctx.fill();
+                    }
                 }
                 
                 if (obj.dangerZones) {
@@ -1521,6 +1774,11 @@
             const level = levels[levelId - 1];
             if (!level) return;
             
+            if (levelId === 1 && !gameState.progress.level1TutorialShown) {
+                showLevel1Tutorial();
+                return; // Wait for tutorial to be dismissed
+            }
+
             gameState.mode = GameState.PLAYING;
             gameState.currentLevel = levelId;
             gameState.progress = {
@@ -1549,8 +1807,27 @@
             }
             
             hideAllOverlays();
+            
+            // Show tutorial for Level 1
+            if (levelId === 1) {
+                document.getElementById('tutorialOverlay').classList.add('active');
+            }
+            
             updateHUD();
         }
+
+        function showLevel1Tutorial() {
+            gameState.mode = GameState.PAUSED; // Pause game while tutorial is active
+            hideAllOverlays();
+            document.getElementById('level1TutorialOverlay').classList.add('active');
+        }
+
+        // Helper to resume from level 1 tutorial
+        document.getElementById('startLevel1TutorialBtn').addEventListener('click', () => {
+            gameState.progress.level1TutorialShown = true;
+            saveProgress();
+            startLevel(1); // Re-start level 1, now tutorial will be skipped
+        });
         
         function startSandbox() {
             gameState.mode = GameState.SANDBOX;
@@ -1569,12 +1846,14 @@
         function pauseGame() {
             if (gameState.mode === GameState.PLAYING) {
                 gameState.mode = GameState.PAUSED;
+                document.getElementById('pauseOverlay').classList.add('active');
             }
         }
         
         function resumeGame() {
             if (gameState.mode === GameState.PAUSED) {
                 gameState.mode = GameState.PLAYING;
+                document.getElementById('pauseOverlay').classList.remove('active');
             }
         }
         
@@ -1645,6 +1924,15 @@
             const budgetText = level.constraints.budget === Infinity ?
                 '∞' : `${gameState.progress.lavaUsed.toFixed(1)}/${level.constraints.budget}`;
             document.getElementById('hudLava').textContent = budgetText;
+
+            if (level.constraints.budget !== Infinity) {
+                const lavaRemainingRatio = (level.constraints.budget - gameState.progress.lavaUsed) / level.constraints.budget;
+                if (lavaRemainingRatio < 0.25) {
+                    document.getElementById('hudLava').classList.add('low-budget');
+                } else {
+                    document.getElementById('hudLava').classList.remove('low-budget');
+                }
+            }
             
             if (level.constraints.timeLimit) {
                 document.getElementById('hudTime').textContent = `${gameState.progress.timeElapsed.toFixed(1)}s`;
@@ -1715,6 +2003,11 @@
             
             document.getElementById('levelSelectOverlay').classList.add('active');
         }
+
+        function showInstructions() {
+            hideAllOverlays();
+            document.getElementById('instructionsOverlay').classList.add('active');
+        }
         
         function hideAllOverlays() {
             document.querySelectorAll('.overlay').forEach(o => o.classList.remove('active'));
@@ -1727,7 +2020,8 @@
                 version: 1,
                 unlockedLevels: gameState.unlockedLevels,
                 starsPerLevel: gameState.starsPerLevel,
-                scorePerLevel: gameState.scorePerLevel
+                scorePerLevel: gameState.scorePerLevel,
+                level1TutorialShown: gameState.progress.level1TutorialShown
             };
             localStorage.setItem('lavaFlowProgress', JSON.stringify(data));
         }
@@ -1740,6 +2034,22 @@
                     gameState.unlockedLevels = data.unlockedLevels || [1];
                     gameState.starsPerLevel = data.starsPerLevel || {};
                     gameState.scorePerLevel = data.scorePerLevel || {};
+                    gameState.progress.level1TutorialShown = data.level1TutorialShown || false;
+                } catch (e) {
+                    console.error('Failed to load progress:', e);
+                }
+            }
+        }
+        
+        function loadProgress() {
+            const saved = localStorage.getItem('lavaFlowProgress');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    gameState.unlockedLevels = data.unlockedLevels || [1];
+                    gameState.starsPerLevel = data.starsPerLevel || {};
+                    gameState.scorePerLevel = data.scorePerLevel || {};
+                    gameState.progress.level1TutorialShown = data.level1TutorialShown || false;
                 } catch (e) {
                     console.error('Failed to load progress:', e);
                 }
@@ -1750,13 +2060,13 @@
         
         canvas.addEventListener('mousedown', (e) => {
             if (gameState.mode === GameState.PLAYING) {
-                // Check gate clicks
                 const cellSize = Math.min(canvas.width, canvas.height) / GRID_SIZE;
                 const offsetX = (canvas.width - GRID_SIZE * cellSize) / 2;
                 const offsetY = (canvas.height - GRID_SIZE * cellSize) / 2;
                 const gridX = Math.floor((e.clientX - offsetX) / cellSize);
                 const gridY = Math.floor((e.clientY - offsetY) / cellSize);
                 
+                let handled = false;
                 for (const elem of interactiveElements) {
                     if (elem.type === 'gate') {
                         const centerX = elem.x + elem.width / 2;
@@ -1764,15 +2074,19 @@
                         const dist = Math.sqrt(Math.pow(gridX - centerX, 2) + Math.pow(gridY - centerY, 2));
                         if (dist < 5) {
                             elem.open = !elem.open;
-                            return;
+                            handled = true;
+                            break;
                         }
                     }
                 }
                 
-                isPouring = true;
-                pourX = e.clientX;
-                pourY = e.clientY;
-                pourLava(pourX, pourY);
+                if (!handled) {
+                    isPouring = true;
+                    pourX = e.clientX;
+                    pourY = e.clientY;
+                    pourIndicatorTargetAlpha = 1;
+                    pourLava(pourX, pourY);
+                }
             }
         });
         
@@ -1780,25 +2094,38 @@
             if (isPouring && gameState.mode === GameState.PLAYING) {
                 pourX = e.clientX;
                 pourY = e.clientY;
+                pourIndicatorTargetAlpha = 1; // Keep indicator visible while moving
+            } else if (gameState.mode === GameState.PLAYING) {
+                // Update pourX, pourY even when not pouring for cursor feedback
+                pourX = e.clientX;
+                pourY = e.clientY;
+                pourIndicatorTargetAlpha = 0.5; // Slightly visible when just hovering
             }
         });
         
         canvas.addEventListener('mouseup', () => {
             isPouring = false;
+            pourIndicatorTargetAlpha = 0; // Fade out indicator
+        });
+        
+        // Add mouseleave to fade out indicator when mouse leaves canvas
+        canvas.addEventListener('mouseleave', () => {
+            if (!isPouring) {
+                pourIndicatorTargetAlpha = 0;
+            }
         });
         
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             if (gameState.mode === GameState.PLAYING) {
                 const touch = e.touches[0];
-                
-                // Check gate clicks
                 const cellSize = Math.min(canvas.width, canvas.height) / GRID_SIZE;
                 const offsetX = (canvas.width - GRID_SIZE * cellSize) / 2;
                 const offsetY = (canvas.height - GRID_SIZE * cellSize) / 2;
                 const gridX = Math.floor((touch.clientX - offsetX) / cellSize);
                 const gridY = Math.floor((touch.clientY - offsetY) / cellSize);
                 
+                let handled = false;
                 for (const elem of interactiveElements) {
                     if (elem.type === 'gate') {
                         const centerX = elem.x + elem.width / 2;
@@ -1806,15 +2133,19 @@
                         const dist = Math.sqrt(Math.pow(gridX - centerX, 2) + Math.pow(gridY - centerY, 2));
                         if (dist < 5) {
                             elem.open = !elem.open;
-                            return;
+                            handled = true;
+                            break;
                         }
                     }
                 }
                 
-                isPouring = true;
-                pourX = touch.clientX;
-                pourY = touch.clientY;
-                pourLava(pourX, pourY);
+                if (!handled) {
+                    isPouring = true;
+                    pourX = touch.clientX;
+                    pourY = touch.clientY;
+                    pourIndicatorTargetAlpha = 1;
+                    pourLava(pourX, pourY);
+                }
             }
         });
         
@@ -1824,12 +2155,20 @@
                 const touch = e.touches[0];
                 pourX = touch.clientX;
                 pourY = touch.clientY;
+                pourIndicatorTargetAlpha = 1; // Keep indicator visible while moving
             }
         });
         
         canvas.addEventListener('touchend', (e) => {
             e.preventDefault();
             isPouring = false;
+            pourIndicatorTargetAlpha = 0; // Fade out indicator
+        });
+        
+        canvas.addEventListener('touchcancel', (e) => {
+            e.preventDefault();
+            isPouring = false;
+            pourIndicatorTargetAlpha = 0; // Fade out indicator
         });
         
         // ==================== UI BUTTON HANDLERS ====================
@@ -1841,6 +2180,7 @@
         
         document.getElementById('levelSelectBtn').addEventListener('click', showLevelSelect);
         document.getElementById('sandboxBtn').addEventListener('click', startSandbox);
+        document.getElementById('mainMenuInstructionsBtn').addEventListener('click', showInstructions);
         document.getElementById('backToMenuBtn').addEventListener('click', showMenu);
         
         document.getElementById('pauseBtn').addEventListener('click', () => {
@@ -1849,6 +2189,23 @@
             } else if (gameState.mode === GameState.PAUSED) {
                 resumeGame();
             }
+        });
+
+        document.getElementById('resumeBtn').addEventListener('click', resumeGame);
+        document.getElementById('pauseRestartBtn').addEventListener('click', restartLevel);
+        document.getElementById('pauseMenuBtn').addEventListener('click', showMenu);
+        document.getElementById('pauseInstructionsBtn').addEventListener('click', showInstructions);
+        document.getElementById('closeInstructionsBtn').addEventListener('click', () => {
+            // If coming from pause menu, go back to pause menu. Otherwise, go to main menu.
+            if (gameState.mode === GameState.PAUSED) {
+                document.getElementById('instructionsOverlay').classList.remove('active');
+            } else {
+                showMenu();
+            }
+        });
+
+        document.getElementById('closeTutorialBtn').addEventListener('click', () => {
+            document.getElementById('tutorialOverlay').classList.remove('active');
         });
         
         document.getElementById('restartBtn').addEventListener('click', restartLevel);
