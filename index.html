@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Lava Flow - Fluid Dynamics Simulation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: none;
+        }
+        
+        body {
+            background: #0a0a0f;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #fff;
+        }
+        
+        #gameCanvas {
+            flex: 1;
+            display: block;
+            cursor: crosshair;
+        }
+        
+        .controls {
+            background: rgba(26, 26, 46, 0.9);
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            border-top: 2px solid #ff6600;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #ff6600, #ff0000);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 102, 0, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.6);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .info {
+            color: #ffaa44;
+            font-size: 14px;
+            margin: 0 10px;
+        }
+        
+        @media (max-width: 600px) {
+            button {
+                padding: 10px 18px;
+                font-size: 14px;
+            }
+            .controls {
+                padding: 10px;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div class="controls">
+        <button id="clearBtn">🌋 Clear Lava</button>
+        <button id="nextTerrainBtn">🏔️ Next Terrain</button>
+        <button id="randomTerrainBtn">🎲 Randomize</button>
+        <span class="info">Click/Tap to Pour Lava</span>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d', { alpha: false });
+        
+        // Simulation grid
+        const GRID_SIZE = 120;
+        let terrain = [];
+        let lava = [];
+        let temperature = [];
+        let particles = [];
+        
+        let currentTerrainIndex = 0;
+        let isPouring = false;
+        let pourX = 0;
+        let pourY = 0;
+        
+        // Resize canvas
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight - 70;
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        // Initialize grids
+        function initGrids() {
+            terrain = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
+            lava = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
+            temperature = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
+        }
+        
+        // Terrain generators
+        const terrainPresets = [
+            // Mountain valley
+            (x, y) => {
+                const centerX = GRID_SIZE / 2;
+                const distFromCenter = Math.abs(x - centerX);
+                return Math.pow(distFromCenter / (GRID_SIZE / 2), 2) * 40 + 
+                       Math.sin(y * 0.1) * 5 +
+                       Math.random() * 3;
+            },
+            // Crater
+            (x, y) => {
+                const centerX = GRID_SIZE / 2;
+                const centerY = GRID_SIZE / 2;
+                const dist = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+                const maxDist = GRID_SIZE / 2;
+                return Math.abs(Math.sin(dist / maxDist * Math.PI)) * 35 + Math.random() * 2;
+            },
+            // Steps
+            (x, y) => {
+                return Math.floor(x / (GRID_SIZE / 5)) * 8 + Math.random() * 2;
+            },
+            // Rolling hills
+            (x, y) => {
+                return Math.sin(x * 0.15) * 15 + 
+                       Math.cos(y * 0.1) * 10 + 
+                       Math.sin(x * 0.05 + y * 0.05) * 8 +
+                       Math.random() * 3;
+            },
+            // Funnel
+            (x, y) => {
+                const centerX = GRID_SIZE / 2;
+                const centerY = GRID_SIZE / 2;
+                const dist = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+                return dist * 0.5 + Math.random() * 2;
+            }
+        ];
+        
+        function generateTerrain(generatorFunc) {
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    terrain[y][x] = generatorFunc(x, y);
+                }
+            }
+            // Smooth terrain
+            smoothTerrain();
+        }
+        
+        function smoothTerrain() {
+            const newTerrain = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
+            for (let y = 1; y < GRID_SIZE - 1; y++) {
+                for (let x = 1; x < GRID_SIZE - 1; x++) {
+                    let sum = 0;
+                    let count = 0;
+                    for (let dy = -1; dy <= 1; dy++) {
+                        for (let dx = -1; dx <= 1; dx++) {
+                            sum += terrain[y + dy][x + dx];
+                            count++;
+                        }
+                    }
+                    newTerrain[y][x] = sum / count;
+                }
+            }
+            // Copy smoothed values
+            for (let y = 1; y < GRID_SIZE - 1; y++) {
+                for (let x = 1; x < GRID_SIZE - 1; x++) {
+                    terrain[y][x] = newTerrain[y][x];
+                }
+            }
+        }
+        
+        function randomTerrain() {
+            generateTerrain((x, y) => {
+                return Math.sin(x * Math.random() * 0.2) * 20 +
+                       Math.cos(y * Math.random() * 0.15) * 15 +
+                       Math.sin((x + y) * Math.random() * 0.1) * 10 +
+                       Math.random() * 5;
+            });
+        }
+        
+        // Particle system
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 4;
+                this.vy = (Math.random() - 0.5) * 4 - 2;
+                this.life = 1.0;
+                this.decay = 0.02 + Math.random() * 0.02;
+                this.size = 2 + Math.random() * 3;
+            }
+            
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.2; // gravity
+                this.life -= this.decay;
+            }
+            
+            isDead() {
+                return this.life <= 0;
+            }
+        }
+        
+        // Lava simulation
+        function simulateLava() {
+            const newLava = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
+            const newTemperature = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
+            
+            for (let y = 1; y < GRID_SIZE - 1; y++) {
+                for (let x = 1; x < GRID_SIZE - 1; x++) {
+                    if (lava[y][x] > 0.01) {
+                        const currentHeight = terrain[y][x] + lava[y][x];
+                        let remaining = lava[y][x];
+                        let totalFlow = 0;
+                        
+                        // Calculate flow to neighbors
+                        const neighbors = [
+                            { dx: 0, dy: -1 },
+                            { dx: 0, dy: 1 },
+                            { dx: -1, dy: 0 },
+                            { dx: 1, dy: 0 },
+                            { dx: -1, dy: -1 },
+                            { dx: 1, dy: -1 },
+                            { dx: -1, dy: 1 },
+                            { dx: 1, dy: 1 }
+                        ];
+                        
+                        const flows = [];
+                        
+                        for (const { dx, dy } of neighbors) {
+                            const nx = x + dx;
+                            const ny = y + dy;
+                            const neighborHeight = terrain[ny][nx] + lava[ny][nx];
+                            const heightDiff = currentHeight - neighborHeight;
+                            
+                            if (heightDiff > 0) {
+                                const flowRate = Math.min(heightDiff * 0.3, remaining * 0.8);
+                                const diagonalFactor = (dx !== 0 && dy !== 0) ? 0.7 : 1.0;
+                                flows.push({ nx, ny, amount: flowRate * diagonalFactor });
+                                totalFlow += flowRate * diagonalFactor;
+                            }
+                        }
+                        
+                        // Distribute lava
+                        if (totalFlow > 0) {
+                            const flowScale = Math.min(1, remaining / totalFlow);
+                            for (const { nx, ny, amount } of flows) {
+                                const actualFlow = amount * flowScale;
+                                newLava[ny][nx] += actualFlow;
+                                newTemperature[ny][nx] = Math.max(newTemperature[ny][nx], temperature[y][x]);
+                                remaining -= actualFlow;
+                                
+                                // Spawn particles occasionally
+                                if (Math.random() < 0.05 && temperature[y][x] > 0.7) {
+                                    const cellSize = Math.min(canvas.width, canvas.height) / GRID_SIZE;
+                                    particles.push(new Particle(
+                                        nx * cellSize + cellSize / 2,
+                                        ny * cellSize + cellSize / 2
+                                    ));
+                                }
+                            }
+                        }
+                        
+                        newLava[y][x] += remaining;
+                        newTemperature[y][x] = Math.max(newTemperature[y][x], temperature[y][x] * 0.995);
+                    }
+                }
+            }
+            
+            lava = newLava;
+            temperature = newTemperature;
+            
+            // Update particles
+            particles = particles.filter(p => {
+                p.update();
+                return !p.isDead();
+            });
+        }
+        
+        // Pour lava
+        function pourLava(screenX, screenY) {
+            const cellSize = Math.min(canvas.width, canvas.height) / GRID_SIZE;
+            const offsetX = (canvas.width - GRID_SIZE * cellSize) / 2;
+            const offsetY = (canvas.height - GRID_SIZE * cellSize) / 2;
+            
+            const gridX = Math.floor((screenX - offsetX) / cellSize);
+            const gridY = Math.floor((screenY - offsetY) / cellSize);
+            
+            if (gridX >= 0 && gridX < GRID_SIZE && gridY >= 0 && gridY < GRID_SIZE) {
+                lava[gridY][gridX] += 0.5;
+                temperature[gridY][gridX] = 1.0;
+                
+                // Spawn particles
+                if (Math.random() < 0.3) {
+                    particles.push(new Particle(screenX, screenY));
+                }
+            }
+        }
+        
+        // Rendering
+        function getColorForLava(temp) {
+            if (temp > 0.9) return `rgb(255, 255, ${Math.floor(255 * (1 - temp))})`;
+            if (temp > 0.7) return `rgb(255, ${Math.floor(255 * (temp - 0.7) / 0.2)}, 0)`;
+            if (temp > 0.5) return `rgb(255, ${Math.floor(102 * (temp - 0.5) / 0.2)}, 0)`;
+            if (temp > 0.3) return `rgb(255, 0, 0)`;
+            if (temp > 0.1) return `rgb(${Math.floor(136 + (255 - 136) * (temp - 0.1) / 0.2)}, 0, 0)`;
+            return `rgb(${Math.floor(136 * temp / 0.1)}, 0, 0)`;
+        }
+        
+        function render() {
+            ctx.fillStyle = '#0a0a0f';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const cellSize = Math.min(canvas.width, canvas.height) / GRID_SIZE;
+            const offsetX = (canvas.width - GRID_SIZE * cellSize) / 2;
+            const offsetY = (canvas.height - GRID_SIZE * cellSize) / 2;
+            
+            // Render terrain
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    const height = terrain[y][x];
+                    const brightness = 26 + Math.floor(height * 0.8);
+                    ctx.fillStyle = `rgb(${brightness}, ${brightness}, ${brightness + 20})`;
+                    ctx.fillRect(
+                        offsetX + x * cellSize,
+                        offsetY + y * cellSize,
+                        cellSize + 1,
+                        cellSize + 1
+                    );
+                }
+            }
+            
+            // Render lava with glow
+            ctx.save();
+            ctx.shadowBlur = 15;
+            
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    if (lava[y][x] > 0.01) {
+                        const temp = temperature[y][x];
+                        const alpha = Math.min(1, lava[y][x]);
+                        
+                        ctx.shadowColor = temp > 0.7 ? '#ff6600' : '#880000';
+                        ctx.globalAlpha = alpha;
+                        ctx.fillStyle = getColorForLava(temp);
+                        ctx.fillRect(
+                            offsetX + x * cellSize,
+                            offsetY + y * cellSize,
+                            cellSize + 1,
+                            cellSize + 1
+                        );
+                    }
+                }
+            }
+            
+            ctx.restore();
+            ctx.globalAlpha = 1;
+            
+            // Render particles
+            for (const particle of particles) {
+                const alpha = particle.life;
+                const temp = particle.life;
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = getColorForLava(temp);
+                ctx.beginPath();
+                ctx.arc(
+                    offsetX + particle.x,
+                    offsetY + particle.y,
+                    particle.size,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.fill();
+            }
+            
+            ctx.globalAlpha = 1;
+        }
+        
+        // Game loop
+        function gameLoop() {
+            simulateLava();
+            
+            if (isPouring) {
+                pourLava(pourX, pourY);
+            }
+            
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Input handling
+        canvas.addEventListener('mousedown', (e) => {
+            isPouring = true;
+            pourX = e.clientX;
+            pourY = e.clientY;
+            pourLava(pourX, pourY);
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (isPouring) {
+                pourX = e.clientX;
+                pourY = e.clientY;
+            }
+        });
+        
+        canvas.addEventListener('mouseup', () => {
+            isPouring = false;
+        });
+        
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isPouring = true;
+            const touch = e.touches[0];
+            pourX = touch.clientX;
+            pourY = touch.clientY;
+            pourLava(pourX, pourY);
+        });
+        
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (isPouring) {
+                const touch = e.touches[0];
+                pourX = touch.clientX;
+                pourY = touch.clientY;
+            }
+        });
+        
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            isPouring = false;
+        });
+        
+        // Controls
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            lava = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
+            temperature = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
+            particles = [];
+        });
+        
+        document.getElementById('nextTerrainBtn').addEventListener('click', () => {
+            currentTerrainIndex = (currentTerrainIndex + 1) % terrainPresets.length;
+            generateTerrain(terrainPresets[currentTerrainIndex]);
+            lava = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
+            temperature = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
+            particles = [];
+        });
+        
+        document.getElementById('randomTerrainBtn').addEventListener('click', () => {
+            randomTerrain();
+            lava = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
+            temperature = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
+            particles = [];
+        });
+        
+        // Initialize
+        initGrids();
+        generateTerrain(terrainPresets[0]);
+        gameLoop();
+    </script>
+</body>
+</html>
