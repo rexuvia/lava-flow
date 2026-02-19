@@ -96,6 +96,125 @@ The simulation is intentionally simplified to prioritize visual satisfaction and
 
 ## 📜 CHANGELOG
 
+### Version 2.1 - UX & Controls Refinement (2026-02-19)
+
+**🎮 FOCUS: First-Time Player Experience & Control Responsiveness**
+
+Major quality-of-life improvements addressing playtesting feedback on controls and gameplay intuitiveness.
+
+#### ✨ Enhanced Controls & Visual Feedback
+
+**Pour Mechanic Improvements:**
+- **Visual Pour Indicator**: Glowing orange circle (radius 15px) appears at cursor while pouring
+- **Smooth Alpha Fade**: Pour indicator smoothly fades in/out for better visual feedback
+- **Responsive Feedback**: Cursor shows immediate visual response to pour actions
+- **Mobile Support**: Works seamlessly on touch devices
+
+**Pour Point Enhancement:**
+- **Pulsating Visual Glow**: Valid pour points now pulse with animated glow effect
+- **Better Visual Distinction**: Dashed circle outlines + solid center indicator
+- **Shadow Effects**: Glow shadows make restricted areas more obvious
+- **Improved Clarity**: Players can easily see where they're allowed to pour
+
+#### 🎓 Tutorial & Guidance System
+
+**Level 1 Tutorial Modal:**
+- **First-Time Teaching**: Auto-displays on Level 1 start
+- **Simple Instructions**: Explains pour mechanic with numbered steps
+- **Visual Examples**: Shows what to do and how objectives work
+- **"Got It!" Button**: Players dismiss when ready to play
+- **Helpful Tip**: Emphasizes that lava flows downhill
+
+**Pause Menu with Instructions:**
+- **Full Pause Overlay**: Proper pause menu (not just a state change)
+- **Multiple Options**:
+  - Resume Game button
+  - Instructions button (comprehensive guide)
+  - Restart Level button
+  - Main Menu button
+- **Comprehensive Instructions Modal**:
+  - Controls section (click/tap/drag/interact)
+  - Objective types guide (FILL, REACH, COLLECT, CONNECT, SEQUENCE, CONTAIN)
+  - Scoring explanation
+  - Can be accessed from pause menu or main menu
+
+#### 🎨 Visual Improvements
+
+**Lava Budget Warning:**
+- **Low Budget Indicator**: HUD lava counter pulses red when < 25% budget remains
+- **Pulsating Animation**: Scale up/down with opacity change
+- **Clear Warning**: Players see visually that they're running low
+- **Prevents Surprises**: Reduces unexpected failure conditions
+
+**Objective Progress Display:**
+- **Fill Target Progress**: Shows circular progress fill for FILL_TARGET objectives
+- **Collection Meters**: Displays current/target amounts for basins
+- **Visual Feedback**: Color changes (orange→green) as conditions are met
+- **Better Communication**: Players know exactly what progress they've made
+
+#### 📱 Mobile & Accessibility
+
+**Touch-Friendly Button Sizing:**
+- **Larger Hit Targets**: Buttons now 44px minimum height (iOS standards)
+- **Better Spacing**: Improved padding for comfortable tapping
+- **Mobile Layout**: Buttons stack vertically on mobile (< 600px)
+- **Full-Width Buttons**: Mobile buttons take full width for easier targeting
+- **HUD Adjustment**: Pause/restart/menu buttons sized appropriately
+
+**Responsive Improvements:**
+- **Better Mobile Text**: Font sizes adjusted for readability
+- **Touch-Optimized Layout**: Modal buttons stack naturally on small screens
+- **Accessible Controls**: All UI elements work smoothly on mobile
+
+#### 🎮 Early Level Adjustments (More Forgiving)
+
+**Level 1 - "First Pour":**
+- ✅ Reduced required lava from 8 to 5 (easier completion)
+- ✅ Lowered star thresholds: [800, 1200, 1600] (more attainable)
+- ✅ Infinite budget (no pressure on resource management)
+- ✅ **Result**: Great introductory level with tutorial support
+
+**Level 2 - "The Beacon":**
+- ✅ Increased budget from 60 to 80 (more forgiving)
+- ✅ Adjusted star thresholds: [1000, 1500, 2000] (easier to earn stars)
+- ✅ **Result**: Less punishing while teaching budget awareness
+
+**Level 3 - "Conservation":**
+- ✅ Reduced required lava from 12 to 10 (more achievable)
+- ✅ Increased budget from 40 to 60 (more generous)
+- ✅ Adjusted star thresholds: [1200, 1800, 2500] (better progression)
+- ✅ **Result**: Smooth difficulty ramp after intro levels
+
+#### 🎯 Quality-of-Life Features
+
+**Better Communication:**
+- Instructions available from multiple places (main menu, pause menu)
+- Per-level tutorial for first players
+- Clear objective descriptions in HUD
+- Visual feedback for all interactions
+
+**Improved Flow:**
+- Tutorial doesn't block gameplay (dismissable)
+- Pause menu appears on top (doesn't interrupt rendering)
+- Smooth transitions between UI states
+- No jarring visual jumps
+
+#### 🔧 Technical Details
+
+**Visual Feedback System:**
+- Real-time alpha animation for indicators
+- Math-based pulsation using `Math.sin(Date.now())`
+- Efficient glow effects using canvas shadow blur
+- No performance impact on 60fps target
+
+**UI State Management:**
+- Proper modal overlay system with z-index
+- Tutorial shows on Level 1, never shown again
+- Instructions modal accessible from any state
+- Clean event listener architecture
+
+---
+
 ### Version 2.0 - Full Puzzle Game Release (2026-02-19)
 
 **🎮 MAJOR TRANSFORMATION: Sandbox → Complete Puzzle Game**
