@@ -1945,7 +1945,7 @@
         // ==================== INPUT HANDLING ====================
         
         canvas.addEventListener('mousedown', (e) => {
-            if (gameState.mode === GameState.PLAYING) {
+            if (gameState.mode === GameState.PLAYING || gameState.mode === GameState.SANDBOX) {
                 const cellSize = Math.min(canvas.width, canvas.height) / GRID_SIZE;
                 const offsetX = (canvas.width - GRID_SIZE * cellSize) / 2;
                 const offsetY = (canvas.height - GRID_SIZE * cellSize) / 2;
@@ -1977,7 +1977,7 @@
         });
         
         canvas.addEventListener('mousemove', (e) => {
-            if (isPouring && gameState.mode === GameState.PLAYING) {
+            if (isPouring && (gameState.mode === GameState.PLAYING || gameState.mode === GameState.SANDBOX)) {
                 pourX = e.clientX;
                 pourY = e.clientY;
             }
@@ -1995,7 +1995,7 @@
         
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            if (gameState.mode === GameState.PLAYING) {
+            if (gameState.mode === GameState.PLAYING || gameState.mode === GameState.SANDBOX) {
                 const touch = e.touches[0];
                 const cellSize = Math.min(canvas.width, canvas.height) / GRID_SIZE;
                 const offsetX = (canvas.width - GRID_SIZE * cellSize) / 2;
@@ -2029,7 +2029,7 @@
         
         canvas.addEventListener('touchmove', (e) => {
             e.preventDefault();
-            if (isPouring && gameState.mode === GameState.PLAYING) {
+            if (isPouring && (gameState.mode === GameState.PLAYING || gameState.mode === GameState.SANDBOX)) {
                 const touch = e.touches[0];
                 pourX = touch.clientX;
                 pourY = touch.clientY;
