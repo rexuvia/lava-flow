@@ -2072,7 +2072,7 @@
         document.getElementById('pauseRestartBtn').addEventListener('click', restartLevel);
         document.getElementById('pauseMenuBtn').addEventListener('click', showMenu);
         document.getElementById('pauseInstructionsBtn').addEventListener('click', showInstructions);
-        document.getElementById('closeInstructionsBtn').addEventListener('click', () => {
+        document.getElementById('closeInstructionsBtn').addEventListener('click', () => { hideAllOverlays(); 
             if (gameState.mode === GameState.PAUSED) {
                 hideAllOverlays();
                 document.getElementById('pauseOverlay').classList.add('active');
@@ -2081,7 +2081,7 @@
             }
         });
         
-        document.getElementById('startLevel1TutorialBtn').addEventListener('click', () => {
+        document.getElementById('startLevel1TutorialBtn').addEventListener('click', () => { hideAllOverlays(); 
             gameState.progress.level1TutorialShown = true;
             saveProgress();
             startLevel(1);
